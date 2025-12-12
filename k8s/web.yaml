@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer # Esto intentará darte una IP externa (o localhost en Docker Desktop)
+  ports:
+    - port: 80        # El puerto al que llamarás desde fuera
+      targetPort: 5000 # El puerto donde escucha Flask dentro
+  selector:
+    app: web
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1 # Puedes cambiar esto a 2 o 3 para escalar la app
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: mi-flask-app:v1  # La imagen que construimos antes
+        imagePullPolicy: IfNotPresent # Usa la imagen local si existe
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_APP
+          value: "app.py"
+        - name: FLASK_RUN_HOST
+          value: "0.0.0.0"
+
